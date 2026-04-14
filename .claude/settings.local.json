@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pdftotext \"docs/终端产品总体技术方案.pdf\" -)"
+    ]
+  }
+}
