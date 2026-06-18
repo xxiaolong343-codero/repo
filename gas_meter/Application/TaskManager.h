@@ -48,4 +48,8 @@ void     Timer_Resubscribe(TimeBase_t base, uint8_t handle,
 /* ---- Sleep query (for testing) ---- */
 SleepLevel_t TaskManager_GetSleepLevel(void);
 
+/* ---- Testing support ---- */
+void TaskManager_RunOnce(void);                    /* Single iteration for tests */
+void TaskManager_OnTimeBaseTick(TimeBase_t base);  /* ISR callback */
+
 #endif /* TASK_MANAGER_H */
