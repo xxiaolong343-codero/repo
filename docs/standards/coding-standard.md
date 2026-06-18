@@ -201,7 +201,9 @@ if (ptr == NULL) {
 | 分号前 | 无空格 | `for (i = 0; i < n; i++)` |
 | 函数名与括号间 | 无空格 | `Metering_Init()` 而非 `Metering_Init ()` |
 
-### 3.4 注释风格
+### 3.4 注释风格（强制要求）
+
+#### 3.4.1 注释类型
 
 | 类型 | 格式 | 用途 |
 |------|------|------|
@@ -210,22 +212,97 @@ if (ptr == NULL) {
 | API 文档 | `/** @brief ... */` | 公开函数/类型说明 |
 | 行尾注释 | `/* 注释 */` | 简短标注（谨慎使用） |
 
-**API 文档注释示例：**
+#### 3.4.2 文件头注释（强制）
+
+每个源文件(.c/.h)开头必须有文件头注释，包含 **@file** 和 **@brief**：
+
+```c
+/**
+ * @file metering.c
+ * @brief 计量组件实现 — 红外光采样、齿轮面检测、自学习算法
+ *
+ * 本文件实现计量组件的核心功能，包括：
+ * - 环形缓冲区管理（ISR→主循环数据传递）
+ * - 光学检测算法（白面/黑面判定）
+ * - 采样异常检测（过小/过大/基本关系异常）
+ * - 自学习算法（64组均值 + 一阶滞后滤波）
+ */
+```
+
+**禁止：** 只有 `@file` 和 `@brief` 但无功能说明的文件头。
+
+#### 3.4.3 函数注释（强制）
+
+**所有公开函数**必须有完整注释，包含：
+- `@brief` — 功能说明
+- `@param` — 每个参数的说明（类型 + 含义）
+- `@return` — 返回值说明（void 函数可省略）
+- `@note` — 重要注意事项（可选）
+
 ```c
 /**
  * @brief 初始化计量组件
  *
  * 初始化环形缓冲区，设置默认参数，准备光学采样。
+ * 调用后组件处于空闲状态，等待脉冲中断触发。
+ *
+ * @param params 可选参数指针，NULL 时使用默认值
+ * @return HAL_OK 成功，HAL_ERROR 参数无效
  *
  * @note 必须在调用其他 Metering 函数之前调用。
  */
-void Metering_Init(void);
+HAL_Status_t Metering_Init(const MeteringParams_t *params);
 
 /**
  * @brief 获取累积用气量
  * @return 用气量，单位 0.01 m³
  */
 uint32_t Metering_GetCumulativeVolume(void);
+```
+
+**私有函数（static）** 也应有 `@brief` 注释：
+
+```c
+/**
+ * @brief 收集请求位图到就绪队列
+ */
+static void CollectRequests(void);
+```
+
+#### 3.4.4 结构体注释（强制）
+
+**每个结构体成员**必须有行尾注释说明：
+
+```c
+typedef struct {
+    uint8_t  task_id;   /**< 任务ID（0 ~ TASK_COUNT-1） */
+    bool     enabled;   /**< 配置使能状态 */
+    void   (*process)(void); /**< 任务处理函数指针 */
+} TaskDesc_t;
+```
+
+**禁止：** 结构体成员无注释。
+
+#### 3.4.5 枚举注释（强制）
+
+**每个枚举值**必须有行尾注释说明：
+
+```c
+typedef enum {
+    TIMEBASE_10MS  = 0,   /**< 10ms基准 — 消抖、阀门监控 */
+    TIMEBASE_100MS = 1,   /**< 100ms基准 — 计量采样、LED闪烁 */
+    TIMEBASE_1S    = 2,   /**< 1s基准 — 电源巡检、电池检测 */
+    TIMEBASE_COUNT = 3    /**< 基准数量（仅用于数组大小） */
+} TimeBase_t;
+```
+
+#### 3.4.6 宏注释（强制）
+
+**每个宏定义**必须有注释说明用途：
+
+```c
+#define MAX_SUB_PER_BASE  8    /**< 每个时间基准最大订阅槽数 */
+#define TIMER_HANDLE_INVALID  0xFF  /**< 无效的定时器订阅句柄 */
 ```
 
 ---
